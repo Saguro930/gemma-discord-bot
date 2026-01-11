@@ -2,18 +2,10 @@ import os
 import threading
 import requests
 import discord
+import uvicorn
 from fastapi import FastAPI
 from pydantic import BaseModel
-from transformers import AutoTokenizer, AutoModelForCausalLM
-import uvicorn
-
-# ===== Gemma =====
-MODEL_NAME = "google/gemma-3-270m"
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-model = AutoModelForCausalLM.from_pretrained(
-    MODEL_NAME,
-    device_map="auto"
-)
+from app.model import generate_text
 
 # ===== FastAPI =====
 app = FastAPI()
@@ -23,16 +15,8 @@ class Prompt(BaseModel):
 
 @app.post("/generate")
 def generate(prompt: Prompt):
-    inputs = tokenizer(prompt.text, return_tensors="pt")
-    outputs = model.generate(
-        **inputs,
-        max_new_tokens=120
-    )
     return {
-        "response": tokenizer.decode(
-            outputs[0],
-            skip_special_tokens=True
-        )
+        "response": generate_text(prompt.text)
     }
 
 # ===== Discord Bot =====
@@ -61,5 +45,5 @@ def run_bot():
     client.run(DISCORD_TOKEN)
 
 if __name__ == "__main__":
-    threading.Thread(target=run_api).start()
+    threading.Thread(target=run_api, daemon=True).start()
     run_bot()
