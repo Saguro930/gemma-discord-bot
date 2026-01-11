@@ -1,7 +1,12 @@
+# LLM
 torch
 transformers
 accelerate
+
+# API
 fastapi
 uvicorn
+
+# Discord Bot
 discord.py
 requests
